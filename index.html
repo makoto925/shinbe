@@ -15,6 +15,22 @@
   </style>
 </head>
 <body>
-  <iframe src="https://script.google.com/macros/s/AKfycbw4jMJ6_UOdsjiwlEigCiMDP-M-NO5k5TwZOesxR6TeOYpnZEtBtrY4HqdvfzNSMKeljg/exec?s=%E7%9C%9F%E5%85%B5%E8%A1%9B" allow="geolocation"></iframe>
+  <iframe id="timecard-frame" src="" allow="geolocation"></iframe>
+
+  <script>
+    window.onload = function() {
+      // 1. GitHub PagesのURLから「?s=〇〇」の店舗名を取得
+      const urlParams = new URLSearchParams(window.location.search);
+      let storeName = urlParams.get('s');
+
+      // 2. 基本となるGASのウェブアプリURL
+      const gasBaseUrl = "https://script.google.com/macros/s/AKfycby_JbAEO6qnzuHKqz3Mqx_6xoCuaV3KfzQMYJliAWztZLb-mXiwN-KOZ5tBKUFOq2irsA/exec";
+
+      // 3. 店舗パラメータがあればURLに結合、なければそのまま
+      const iframeSrc = storeName ? `${gasBaseUrl}?s=${encodeURIComponent(storeName)}` : gasBaseUrl;
+
+      // 4. iframeにURLをセットして表示
+      document.getElementById('timecard-frame').src = iframeSrc;
+    };
 </body>
 </html>
