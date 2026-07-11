@@ -10,28 +10,62 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>OFSタイムカード</title>
   <style>
-    body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+    body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background-color: #ffffff; }
     iframe { width: 100%; height: 100%; border: none; }
   </style>
 </head>
 <body>
-  <iframe id="timecard-frame" src="" allow="geolocation"></iframe>
+  <!-- allow="geolocation" に加え、明示的にGASドメインへの権限委譲を指定 -->
+  <iframe id="timecard-frame" src="" allow="geolocation 'src' https://script.google.com"></iframe>
 
   <script>
+    const gasBaseUrl = "https://script.google.com/macros/s/AKfycbyO0Ig81Gi3DUqXR0d-2z3fZdzBfEsx7e8FyKvtAtBFu9XsLyxwyt0dMX9bVrwMxuUw6Q/exec";
+
     window.onload = function() {
-      // 1. GitHub PagesのURLから「?s=〇〇」の店舗名を取得
       const urlParams = new URLSearchParams(window.location.search);
       let storeName = urlParams.get('s');
-
-      // 2. 基本となるGASのウェブアプリURL
-      const gasBaseUrl = "https://script.google.com/macros/s/AKfycbwxFdw4SfgToqdmViCwDBhxUXQ_ulRu6bQyjIMhLRUP6sM-Dq4sLQf9btLUPrkhk3jWzQ/exec";
-
-      // 3. 店舗パラメータがあればURLに結合、なければそのまま
       const iframeSrc = storeName ? `${gasBaseUrl}?s=${encodeURIComponent(storeName)}` : gasBaseUrl;
-
-      // 4. iframeにURLをセットして表示
       document.getElementById('timecard-frame').src = iframeSrc;
     };
+
+    // 💡 ユーザー操作タイミングで親画面から強制的にGPSを起動し、ダイアログを1発で出す仕組み
+    window.addEventListener("message", function(event) {
+      // セキュリティチェック（GASからのメッセージのみ処理）
+      if (!event.origin.startsWith("https://script.google.com")) return;
+
+      if (event.data && event.data.type === "REQUEST_GPS") {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            function(position) {
+              // 成功時：位置情報を子画面（GAS）に送り返す
+              event.source.postMessage({
+                type: "GPS_RESPONSE",
+                success: true,
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+              }, event.origin);
+            },
+            function(error) {
+              // 失敗時
+              let errMsg = "位置情報の取得に失敗しました。";
+              if (error.code === 1) errMsg = "位置情報の利用が拒否されました。設定を確認してください。";
+              event.source.postMessage({
+                type: "GPS_RESPONSE",
+                success: false,
+                error: errMsg
+              }, event.origin);
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+          );
+        } else {
+          event.source.postMessage({
+            type: "GPS_RESPONSE",
+            success: false,
+            error: "この端末は位置情報に対応していません。"
+          }, event.origin);
+        }
+      }
+    });
   </script>
 </body>
 </html>
