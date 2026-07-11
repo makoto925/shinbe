@@ -10,71 +10,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>OFSタイムカード</title>
   <style>
-    body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background-color: #ffffff; }
+    body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
     iframe { width: 100%; height: 100%; border: none; }
   </style>
 </head>
 <body>
-  <!-- allow="geolocation" に加え、明示的にGASドメインへの権限委譲を指定 -->
-  <iframe id="timecard-frame" src="" allow="geolocation 'src' https://script.google.com"></iframe>
+  <iframe id="timecard-frame" src="" allow="geolocation"></iframe>
 
   <script>
-    const gasBaseUrl = "https://script.google.com/macros/s/AKfycbzHlyD8mZ3b3KkKMLCFeV5eq9BVSPCB7sBFjyrTabJz9orQwIoVFs_7O4XwVjvpihQyFA/exec";
-
     window.onload = function() {
+      // 1. GitHub PagesのURLから「?s=〇〇」の店舗名を取得
       const urlParams = new URLSearchParams(window.location.search);
       let storeName = urlParams.get('s');
+
+      // 2. 基本となるGASのウェブアプリURL
+      const gasBaseUrl = "https://script.google.com/macros/s/AKfycbzz4PqNoSXKe35ggzHA7D5Ff1zFuMmSzjSRXSD9cOMf38ylMcQSkQpizZNrLa_2Wtc6JQ/exec";
+
+      // 3. 店舗パラメータがあればURLに結合、なければそのまま
       const iframeSrc = storeName ? `${gasBaseUrl}?s=${encodeURIComponent(storeName)}` : gasBaseUrl;
+
+      // 4. iframeにURLをセットして表示
       document.getElementById('timecard-frame').src = iframeSrc;
     };
-
-  // GAS（子画面）からのメッセージを待ち受ける
-  window.addEventListener("message", function(event) {
-    // 1. GASからGPSの取得リクエストが届いた場合
-    if (event.data && event.data.type === "REQUEST_GPS") {
-      console.log("GASからGPSリクエストを受信しました。位置情報を取得します。");
-      
-      const iframe = document.getElementById('gas-iframe'); // ※お使いのiframeのID名に合わせてください
-      
-      if (!navigator.geolocation) {
-        // GPS未対応ブラウザの場合、失敗をGASに返す
-        iframe.contentWindow.postMessage({
-          type: "GPS_RESPONSE",
-          success: false,
-          error: "Geolocation not supported"
-        }, "*");
-        return;
-      }
-
-      // 高精度で位置情報を取得（タイムアウト10秒）
-      navigator.geolocation.getCurrentPosition(
-        function(position) {
-          console.log("GPS取得成功。GASに送信します。");
-          // 取得成功：GAS（子画面）に位置情報を送り返す
-          iframe.contentWindow.postMessage({
-            type: "GPS_RESPONSE",
-            success: true,
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          }, "*");
-        },
-        function(error) {
-          console.error("GPS取得失敗:", error.message);
-          // 取得失敗：GAS（子画面）に失敗を通知する
-          iframe.contentWindow.postMessage({
-            type: "GPS_RESPONSE",
-            success: false,
-            error: error.message
-          }, "*");
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0
-        }
-      );
-    }
-  });
   </script>
 </body>
 </html>
