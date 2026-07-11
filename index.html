@@ -28,14 +28,14 @@
       document.getElementById('timecard-frame').src = iframeSrc;
     };
 
-// 💡 ユーザー操作タイミングで親画面から強制的にGPSを起動し、ダイアログを1発で出す仕組み
+// 💡 【検証版】すべてのセキュリティフィルターを解除して無条件で受け入れる仕組み
     window.addEventListener("message", function(event) {
-      // 💡【修正】GASウェブアプリの実際のドメイン（script.google.com および googleusercontent.com）を許可
-      if (!event.origin.startsWith("https://script.google.com") && !event.origin.endsWith(".googleusercontent.com")) {
-        return;
-      }
+      // ⚠️ 原因切り分けのため、ドメインチェックを一時的に完全にコメントアウトします
+      // if (!event.origin.startsWith("https://script.google.com") && !event.origin.endsWith(".googleusercontent.com")) return;
 
       if (event.data && event.data.type === "REQUEST_GPS") {
+        console.log("GASからのGPS要求を受信しました。origin:", event.origin);
+        
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(
             function(position) {
