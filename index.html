@@ -28,46 +28,53 @@
       document.getElementById('timecard-frame').src = iframeSrc;
     };
 
-// 💡 【検証版】すべてのセキュリティフィルターを解除して無条件で受け入れる仕組み
-    window.addEventListener("message", function(event) {
-      // ⚠️ 原因切り分けのため、ドメインチェックを一時的に完全にコメントアウトします
-      // if (!event.origin.startsWith("https://script.google.com") && !event.origin.endsWith(".googleusercontent.com")) return;
+  // GAS（子画面）からのメッセージを待ち受ける
+  window.addEventListener("message", function(event) {
+    // 1. GASからGPSの取得リクエストが届いた場合
+    if (event.data && event.data.type === "REQUEST_GPS") {
+      console.log("GASからGPSリクエストを受信しました。位置情報を取得します。");
+      
+      const iframe = document.getElementById('gas-iframe'); // ※お使いのiframeのID名に合わせてください
+      
+      if (!navigator.geolocation) {
+        // GPS未対応ブラウザの場合、失敗をGASに返す
+        iframe.contentWindow.postMessage({
+          type: "GPS_RESPONSE",
+          success: false,
+          error: "Geolocation not supported"
+        }, "*");
+        return;
+      }
 
-      if (event.data && event.data.type === "REQUEST_GPS") {
-        console.log("GASからのGPS要求を受信しました。origin:", event.origin);
-        
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-            function(position) {
-              // 成功時：位置情報を子画面（GAS）に送り返す
-              event.source.postMessage({
-                type: "GPS_RESPONSE",
-                success: true,
-                lat: position.coords.latitude,
-                lng: position.coords.longitude
-              }, event.origin);
-            },
-            function(error) {
-              // 失敗時
-              let errMsg = "位置情報の取得に失敗しました。";
-              if (error.code === 1) errMsg = "位置情報の利用が拒否されました。設定を確認してください。";
-              event.source.postMessage({
-                type: "GPS_RESPONSE",
-                success: false,
-                error: errMsg
-              }, event.origin);
-            },
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-          );
-        } else {
-          event.source.postMessage({
+      // 高精度で位置情報を取得（タイムアウト10秒）
+      navigator.geolocation.getCurrentPosition(
+        function(position) {
+          console.log("GPS取得成功。GASに送信します。");
+          // 取得成功：GAS（子画面）に位置情報を送り返す
+          iframe.contentWindow.postMessage({
+            type: "GPS_RESPONSE",
+            success: true,
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          }, "*");
+        },
+        function(error) {
+          console.error("GPS取得失敗:", error.message);
+          // 取得失敗：GAS（子画面）に失敗を通知する
+          iframe.contentWindow.postMessage({
             type: "GPS_RESPONSE",
             success: false,
-            error: "この端末は位置情報に対応していません。"
-          }, event.origin);
+            error: error.message
+          }, "*");
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
         }
-      }
-    });
+      );
+    }
+  });
   </script>
 </body>
 </html>
