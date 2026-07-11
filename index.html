@@ -28,10 +28,12 @@
       document.getElementById('timecard-frame').src = iframeSrc;
     };
 
-    // 💡 ユーザー操作タイミングで親画面から強制的にGPSを起動し、ダイアログを1発で出す仕組み
+// 💡 ユーザー操作タイミングで親画面から強制的にGPSを起動し、ダイアログを1発で出す仕組み
     window.addEventListener("message", function(event) {
-      // セキュリティチェック（GASからのメッセージのみ処理）
-      if (!event.origin.startsWith("https://script.google.com")) return;
+      // 💡【修正】GASウェブアプリの実際のドメイン（script.google.com および googleusercontent.com）を許可
+      if (!event.origin.startsWith("https://script.google.com") && !event.origin.endsWith(".googleusercontent.com")) {
+        return;
+      }
 
       if (event.data && event.data.type === "REQUEST_GPS") {
         if (navigator.geolocation) {
