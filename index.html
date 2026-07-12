@@ -24,7 +24,7 @@
       let storeName = urlParams.get('s');
 
       // 2. 元の正しいGASのウェブアプリURL（完全に維持）
-      const gasBaseUrl = "https://script.google.com/macros/s/AKfycbylocVaRuiOp6BfWeLbGIv4VOGaW8BeZxRcURXDmO-PauG_-GhR0fCqToup2NhpdDkSSg/exec";
+      const gasBaseUrl = "https://script.google.com/macros/s/AKfycbyUz2Sw_2OzYPnx43x6r5wEzWELa1K6RjnsXR083893TT6mLRXeTQNMTOYR5H0wdwTBfQ/exec";
 
       // 3. 店舗パラメータがあればURLに結合、なければそのまま
       const iframeSrc = storeName ? `${gasBaseUrl}?s=${encodeURIComponent(storeName)}` : gasBaseUrl;
