@@ -19,12 +19,12 @@
 
   <script>
     window.onload = function() {
-      // 1. GitHub PagesのURLから「?s=〇〇」の店舗名を取得
+      // 1. GitHub PagesのURLからパラメータ（店舗名など）を取得
       const urlParams = new URLSearchParams(window.location.search);
       let storeName = urlParams.get('s');
 
       // 2. 基本となるGASのウェブアプリURL
-      const gasBaseUrl = "https://script.google.com/macros/s/AKfycbzz4PqNoSXKe35ggzHA7D5Ff1zFuMmSzjSRXSD9cOMf38ylMcQSkQpizZNrLa_2Wtc6JQ/exec";
+      const gasBaseUrl = "https://script.google.com/macros/s/AKfycbzqshueOg0Z73Pp7O7-F3YZmSkNkP7GxJyVqocc06RrN_T_uNr2UCrs_n3iuV6Sp3C0OA/exec";
 
       // 3. 店舗パラメータがあればURLに結合、なければそのまま
       const iframeSrc = storeName ? `${gasBaseUrl}?s=${encodeURIComponent(storeName)}` : gasBaseUrl;
@@ -32,6 +32,63 @@
       // 4. iframeにURLをセットして表示
       document.getElementById('timecard-frame').src = iframeSrc;
     };
+
+    // 💡【追加】GAS（子画面）からのメッセージ通信を処理する仕組み
+    window.addEventListener("message", function(event) {
+      console.log("親画面がメッセージを受信しました:", event.data);
+
+      if (!event.data) return;
+
+      // 🛠️ 修正点：GPSの取得要求（REQUEST_GPS）が届いた場合
+      if (event.data.type === "REQUEST_GPS") {
+        if (!navigator.geolocation) {
+          // 不正な宛先エラーを防ぐため、送ってきた本人(event.source)へオウム返し
+          event.source.postMessage({
+            type: "GPS_RESPONSE",
+            success: false,
+            error: "Geolocation not supported"
+          }, "*");
+          return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+          function(position) {
+            console.log("親画面でのGPS取得に成功しました。GASへ送り返します。");
+            event.source.postMessage({
+              type: "GPS_RESPONSE",
+              success: true,
+              lat: position.coords.latitude,
+              lng: position.coords.longitude
+            }, "*");
+          },
+          function(error) {
+            console.error("親画面でのGPS取得に失敗しました:", error.message);
+            event.source.postMessage({
+              type: "GPS_RESPONSE",
+              success: false,
+              error: error.message
+            }, "*");
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+          }
+        );
+      }
+
+      // 🔄 修正点：GASから「画面を強制更新して！」というリクエスト（FORCE_RELOAD）が届いた場合
+      if (event.data.type === "FORCE_RELOAD") {
+        console.log("アプリの強制再読み込みを実行します。");
+        
+        // 現在のURL（店舗パラメータなどを含む）を取得し、末尾に最新時刻の数字（タイムスタンプ）を強制付与
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set('reload_ts', Date.now().toString());
+        
+        // iPadに別のページだと認識させて、キャッシュを無視して完全にリロード
+        window.location.href = currentUrl.toString();
+      }
+    });
   </script>
 </body>
 </html>
