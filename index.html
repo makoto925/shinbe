@@ -24,7 +24,7 @@
       let storeName = urlParams.get('s');
 
       // 2. 基本となるGASのウェブアプリURL
-      const gasBaseUrl = "https://script.google.com/macros/s/AKfycbzqshueOg0Z73Pp7O7-F3YZmSkNkP7GxJyVqocc06RrN_T_uNr2UCrs_n3iuV6Sp3C0OA/exec";
+      const gasBaseUrl = "https://script.google.com/macros/s/AKfycbxnLHwx1jFTwWrMNOQpJL5Z0T4kLTqL0oCI7WNFC2duGa8QFRiJZ9Ksf0uSVmZ7cPhK/exec";
 
       // 3. 店舗パラメータがあればURLに結合、なければそのまま
       const iframeSrc = storeName ? `${gasBaseUrl}?s=${encodeURIComponent(storeName)}` : gasBaseUrl;
@@ -33,7 +33,7 @@
       document.getElementById('timecard-frame').src = iframeSrc;
     };
 
-    // 💡【追加】GAS（子画面）からのメッセージ通信を処理する仕組み
+/*    // 💡【追加】GAS（子画面）からのメッセージ通信を処理する仕組み
     window.addEventListener("message", function(event) {
       console.log("親画面がメッセージを受信しました:", event.data);
 
@@ -88,6 +88,7 @@
         // iPadに別のページだと認識させて、キャッシュを無視して完全にリロード
         window.location.href = currentUrl.toString();
       }
+      */
     });
   </script>
 </body>
