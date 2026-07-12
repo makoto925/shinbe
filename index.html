@@ -23,8 +23,8 @@
       const urlParams = new URLSearchParams(window.location.search);
       let storeName = urlParams.get('s');
 
-      // 2. 基本となるGASのウェブアプリURL
-      const gasBaseUrl = "https://script.google.com/macros/s/AKfycbxnLHwx1jFTwWrMNOQpJL5Z0T4kLTqL0oCI7WNFC2duGa8QFRiJZ9Ksf0uSVmZ7cPhK/exec";
+      // 2. 元の正しいGASのウェブアプリURL（完全に維持）
+      const gasBaseUrl = "https://script.google.com/macros/s/AKfycbxXbDBafSYnY9op4n8JxLm5VyPQig87pB_bmxHTxGt76gdX88Cw6C887u8VLDsx0ZF2tw/exec";
 
       // 3. 店舗パラメータがあればURLに結合、なければそのまま
       const iframeSrc = storeName ? `${gasBaseUrl}?s=${encodeURIComponent(storeName)}` : gasBaseUrl;
@@ -33,16 +33,15 @@
       document.getElementById('timecard-frame').src = iframeSrc;
     };
 
-/*    // 💡【追加】GAS（子画面）からのメッセージ通信を処理する仕組み
+    // 💡 GAS（子画面）からのメッセージ通信を処理する仕組み（コメントアウトを解除・修正）
     window.addEventListener("message", function(event) {
       console.log("親画面がメッセージを受信しました:", event.data);
 
       if (!event.data) return;
 
-      // 🛠️ 修正点：GPSの取得要求（REQUEST_GPS）が届いた場合
+      // 📍 GPSの取得要求（REQUEST_GPS）が届いた場合
       if (event.data.type === "REQUEST_GPS") {
         if (!navigator.geolocation) {
-          // 不正な宛先エラーを防ぐため、送ってきた本人(event.source)へオウム返し
           event.source.postMessage({
             type: "GPS_RESPONSE",
             success: false,
@@ -77,7 +76,7 @@
         );
       }
 
-      // 🔄 修正点：GASから「画面を強制更新して！」というリクエスト（FORCE_RELOAD）が届いた場合
+      // 🔄 GASから「画面を強制更新して！」というリクエスト（FORCE_RELOAD）が届いた場合
       if (event.data.type === "FORCE_RELOAD") {
         console.log("アプリの強制再読み込みを実行します。");
         
@@ -88,7 +87,6 @@
         // iPadに別のページだと認識させて、キャッシュを無視して完全にリロード
         window.location.href = currentUrl.toString();
       }
-      */
     });
   </script>
 </body>
